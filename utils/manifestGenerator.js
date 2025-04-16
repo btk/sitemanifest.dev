@@ -1,8 +1,46 @@
 export const generateManifest = async (imagePath, themeColor) => {
   try {
-    // Get dominant color from image
-    const colors = await getColors(imagePath);
-    const dominantColor = colors ? `#${colors[0].toString(16).padStart(6, '0')}` : '#ffffff';
+    // Create an image element to get the dominant color
+    const img = new Image();
+    const imageUrl = URL.createObjectURL(imagePath);
+    
+    // Wait for the image to load
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = imageUrl;
+    });
+
+    // Create a canvas to analyze the image
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+
+    // Get the image data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Simple color extraction (get the most common color)
+    const colorCounts = {};
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      // Skip transparent pixels
+      if (data[i + 3] < 128) continue;
+      // Convert RGB to hex
+      const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+      colorCounts[hex] = (colorCounts[hex] || 0) + 1;
+    }
+
+    // Get the most common color
+    const dominantColor = Object.entries(colorCounts)
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || themeColor;
+
+    // Clean up the object URL
+    URL.revokeObjectURL(imageUrl);
 
     // Generate manifest with absolute icon paths
     const manifest = {
