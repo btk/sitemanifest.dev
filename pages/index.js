@@ -1,160 +1,197 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { HexColorPicker } from 'react-colorful';
-import { isMobile } from 'react-device-detect';
-import { JsonView, allExpanded, darkStyles } from 'react-json-view-lite';
-import 'react-json-view-lite/dist/index.css';
-import { useStore } from '../store';
 import { generateManifest } from '../utils/manifestGenerator';
+import { crawlWebsite } from '../utils/websiteCrawler';
 
 export default function Home() {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [manifest, setManifest] = useState(null);
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#ffffff');
-  const [showJson, setShowJson] = useState(false);
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [websiteDetails, setWebsiteDetails] = useState(null);
 
-  const { themeColor, setThemeColor } = useStore();
-
-  const onDrop = useCallback(async (acceptedFiles) => {
-    if (acceptedFiles.length === 0) return;
-
-    const file = acceptedFiles[0];
-    const imageUrl = URL.createObjectURL(file);
-    setImage(imageUrl);
+  const onDrop = async (acceptedFiles) => {
     setLoading(true);
     setError(null);
-
     try {
-      const manifestData = await generateManifest(imageUrl, themeColor);
-      setManifest(manifestData);
+      const file = acceptedFiles[0];
+      const imageUrl = URL.createObjectURL(file);
+      setImage(imageUrl);
+      
+      const { manifest: generatedManifest, dominantColor } = await generateManifest(file);
+      setManifest(generatedManifest);
+      setSelectedColor(dominantColor);
     } catch (err) {
-      setError('Failed to analyze image. Please try again.');
-      console.error('Error:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [themeColor]);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
     },
     maxFiles: 1
   });
 
-  const handleColorChange = (color) => {
-    setSelectedColor(color);
-    setThemeColor(color);
+  const handleWebsiteCrawl = async () => {
+    if (!websiteUrl) return;
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const details = await crawlWebsite(websiteUrl);
+      setWebsiteDetails(details);
+      
+      if (manifest) {
+        setManifest({
+          ...manifest,
+          name: details.name,
+          short_name: details.short_name,
+          description: details.description,
+          start_url: details.start_url
+        });
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8">
-          Site Manifest Generator
-        </h1>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            PWA Manifest Generator
+          </h1>
+          <p className="text-lg text-gray-600">
+            Generate PWA manifest files with automatic color detection and website crawling
+          </p>
+        </div>
 
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
-            }`}
-          >
-            <input {...getInputProps()} />
-            {image ? (
-              <div className="relative">
+        <div className="space-y-8">
+          {/* Website URL Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Website Details</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Enter Website URL
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    placeholder="https://example.com"
+                    className="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base text-gray-900 placeholder-gray-500"
+                  />
+                  <button
+                    onClick={handleWebsiteCrawl}
+                    disabled={loading || !websiteUrl}
+                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium transition-colors"
+                  >
+                    {loading ? 'Fetching...' : 'Fetch Details'}
+                  </button>
+                </div>
+              </div>
+              {websiteDetails && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-2">Fetched Details</h3>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <p><span className="font-medium">Title:</span> {websiteDetails.name}</p>
+                    <p><span className="font-medium">Description:</span> {websiteDetails.description}</p>
+                    {websiteDetails.favicon && (
+                      <p><span className="font-medium">Favicon:</span> {websiteDetails.favicon}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Icon Upload Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Icon Upload</h2>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                isDragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'
+              }`}
+            >
+              <input {...getInputProps()} />
+              {isDragActive ? (
+                <p className="text-indigo-600 font-medium">Drop the icon here...</p>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-gray-600">Drag and drop an icon, or click to select</p>
+                  <p className="text-sm text-gray-500">Supported formats: PNG, JPG, JPEG, GIF</p>
+                </div>
+              )}
+            </div>
+            {image && (
+              <div className="mt-4">
                 <img
                   src={image}
-                  alt="Uploaded preview"
-                  className="max-h-64 mx-auto rounded-lg"
+                  alt="Preview"
+                  className="max-w-xs mx-auto rounded-lg shadow-sm"
                 />
-                <button
-                  onClick={() => setImage(null)}
-                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
-                >
-                  ×
-                </button>
-              </div>
-            ) : (
-              <div>
-                <p className="text-lg text-gray-600">
-                  {isDragActive
-                    ? 'Drop the image here'
-                    : 'Drag and drop an image here, or click to select'}
-                </p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Supported formats: PNG, JPG, JPEG, GIF, WEBP
-                </p>
               </div>
             )}
           </div>
 
-          {loading && (
-            <div className="mt-4 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Analyzing image...</p>
+          {/* Theme Color Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Theme Color</h2>
+            <div className="flex flex-col items-center space-y-4">
+              <HexColorPicker
+                color={selectedColor}
+                onChange={setSelectedColor}
+                className="mx-auto"
+              />
+              <div className="flex items-center space-x-2">
+                <div
+                  className="w-8 h-8 rounded-full border border-gray-300"
+                  style={{ backgroundColor: selectedColor }}
+                />
+                <span className="font-mono text-sm text-gray-600">{selectedColor}</span>
+              </div>
             </div>
-          )}
+          </div>
 
+          {/* Error Display */}
           {error && (
-            <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-lg">
-              {error}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700">{error}</p>
             </div>
           )}
 
+          {/* Manifest Display */}
           {manifest && (
-            <div className="mt-6">
+            <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Theme Color</h2>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowColorPicker(!showColorPicker)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
-                  >
-                    <div
-                      className="w-6 h-6 rounded-full border border-gray-300"
-                      style={{ backgroundColor: selectedColor }}
-                    />
-                    <span>{selectedColor}</span>
-                  </button>
-                  {showColorPicker && (
-                    <div className="absolute right-0 mt-2 z-10">
-                      <HexColorPicker
-                        color={selectedColor}
-                        onChange={handleColorChange}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-6">
+                <h2 className="text-xl font-semibold text-gray-900">Generated Manifest</h2>
                 <button
-                  onClick={() => setShowJson(!showJson)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  onClick={() => navigator.clipboard.writeText(JSON.stringify(manifest, null, 2))}
+                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  {showJson ? 'Hide JSON' : 'Show JSON'}
+                  Copy JSON
                 </button>
-
-                {showJson && (
-                  <div className="mt-4 p-4 bg-gray-900 rounded-lg overflow-auto">
-                    <JsonView
-                      data={manifest}
-                      shouldExpandNode={allExpanded}
-                      style={darkStyles}
-                    />
-                  </div>
-                )}
               </div>
+              <pre className="bg-gray-50 p-4 rounded-lg overflow-auto text-sm font-mono">
+                {JSON.stringify(manifest, null, 2)}
+              </pre>
             </div>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

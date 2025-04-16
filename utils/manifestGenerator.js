@@ -32,8 +32,9 @@ export const generateManifest = async (imagePath, themeColor) => {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      const color = `rgb(${r},${g},${b})`;
-      colorCounts[color] = (colorCounts[color] || 0) + 1;
+      // Convert RGB to hex
+      const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+      colorCounts[hex] = (colorCounts[hex] || 0) + 1;
     }
     
     // Get the most common color
@@ -42,7 +43,7 @@ export const generateManifest = async (imagePath, themeColor) => {
     
     console.log('Dominant color:', dominantColor);
 
-    return {
+    const manifest = {
       name: 'My PWA',
       short_name: 'PWA',
       description: 'A Progressive Web Application',
@@ -63,6 +64,8 @@ export const generateManifest = async (imagePath, themeColor) => {
         },
       ],
     };
+
+    return { manifest, dominantColor };
   } catch (error) {
     console.error('Error generating manifest:', error);
     console.error('Error details:', {
@@ -73,25 +76,28 @@ export const generateManifest = async (imagePath, themeColor) => {
     
     // Return a manifest with default colors if color extraction fails
     return {
-      name: 'My PWA',
-      short_name: 'PWA',
-      description: 'A Progressive Web Application',
-      start_url: '/',
-      display: 'standalone',
-      background_color: themeColor || '#ffffff',
-      theme_color: themeColor || '#ffffff',
-      icons: [
-        {
-          src: imagePath,
-          sizes: '192x192',
-          type: 'image/png',
-        },
-        {
-          src: imagePath,
-          sizes: '512x512',
-          type: 'image/png',
-        },
-      ],
+      manifest: {
+        name: 'My PWA',
+        short_name: 'PWA',
+        description: 'A Progressive Web Application',
+        start_url: '/',
+        display: 'standalone',
+        background_color: themeColor || '#ffffff',
+        theme_color: themeColor || '#ffffff',
+        icons: [
+          {
+            src: imagePath,
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: imagePath,
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      },
+      dominantColor: '#ffffff'
     };
   }
 }; 
