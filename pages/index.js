@@ -109,28 +109,47 @@ export default function Home() {
         const imageData = colorCtx.getImageData(0, 0, colorCanvas.width, colorCanvas.height);
         const data = imageData.data;
 
-        // Simple color extraction (get the most common color)
-        const colorCounts = {};
+        // Calculate average color and overall brightness
+        let r = 0, g = 0, b = 0, count = 0;
+        let totalBrightness = 0;
+        
         for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
           // Skip transparent pixels
           if (data[i + 3] < 128) continue;
-          // Convert RGB to hex
-          const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-          colorCounts[hex] = (colorCounts[hex] || 0) + 1;
+          
+          // Get RGB values
+          const pixelR = data[i];
+          const pixelG = data[i + 1];
+          const pixelB = data[i + 2];
+          
+          // Calculate pixel brightness
+          const brightness = (pixelR * 0.299 + pixelG * 0.587 + pixelB * 0.114) / 255;
+          totalBrightness += brightness;
+          
+          r += pixelR;
+          g += pixelG;
+          b += pixelB;
+          count++;
         }
 
-        // Get the most common color
-        const dominantColor = Object.entries(colorCounts)
-          .sort((a, b) => b[1] - a[1])[0]?.[0] || '#ffffff';
+        // Calculate average color (theme color)
+        r = Math.round(r / count);
+        g = Math.round(g / count);
+        b = Math.round(b / count);
+        const themeColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 
-        // Calculate a contrasting color for theme
-        const luminance = (0.299 * parseInt(dominantColor.slice(1, 3), 16) + 
-                          0.587 * parseInt(dominantColor.slice(3, 5), 16) + 
-                          0.114 * parseInt(dominantColor.slice(5, 7), 16)) / 255;
-        const themeColor = luminance > 0.5 ? '#000000' : '#ffffff';
+        // Calculate average brightness
+        const avgBrightness = totalBrightness / count;
+
+        // Set background color based on average brightness
+        let backgroundColor;
+        if (avgBrightness < 0.3) {
+          backgroundColor = '#000000'; // Dark images get black background
+        } else if (avgBrightness > 0.7) {
+          backgroundColor = '#ffffff'; // Light images get white background
+        } else {
+          backgroundColor = '#808080'; // Medium brightness gets gray background
+        }
 
         // Generate icons in different sizes
         const iconSizes = [
@@ -183,7 +202,7 @@ export default function Home() {
         setManifest(prev => ({
           ...prev,
           icons,
-          background_color: dominantColor,
+          background_color: backgroundColor,
           theme_color: themeColor
         }));
 
@@ -513,7 +532,7 @@ export default function Home() {
             {/* Theme Colors Section */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Step 5: Theme Colors</h2>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Background Color
@@ -588,40 +607,7 @@ export default function Home() {
 
             {/* Generated Manifest */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Generated Manifest</h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCopyJson}
-                    className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-                  >
-                    {copied ? (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                        </svg>
-                        Copy
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={handleDownload}
-                    className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download
-                  </button>
-                </div>
-              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Generated Manifest</h2>
               <div className="bg-gray-50 rounded-lg p-4 overflow-auto max-h-96">
                 <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">
                   <code className="json-block" dangerouslySetInnerHTML={{
@@ -691,7 +677,10 @@ export default function Home() {
                         .filter(icon => icon.purpose === 'maskable')
                         .map((icon, index) => (
                           <div key={index} className="flex flex-col items-center">
-                            <div className="w-16 h-16 rounded-2xl bg-gray-100 p-2">
+                            <div 
+                              className="w-16 h-16 rounded-2xl p-2"
+                              style={{ backgroundColor: manifest.background_color }}
+                            >
                               <img 
                                 src={icon.src} 
                                 alt={`Maskable Icon ${icon.sizes}`} 
@@ -705,6 +694,52 @@ export default function Home() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Download and Usage Instructions */}
+            <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={handleCopyJson}
+                    className="flex-1 px-4 py-3 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {copied ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                        Copy Manifest JSON
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    className="flex-1 px-4 py-3 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download Files
+                  </button>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">How to use these files:</h4>
+                  <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                    <li>Place the <code className="bg-blue-100 px-1 py-0.5 rounded">manifest.json</code> file in the root directory of your website</li>
+                    <li>If you're using Next.js, place the <code className="bg-blue-100 px-1 py-0.5 rounded">manifest.json</code> in the <code className="bg-blue-100 px-1 py-0.5 rounded">public</code> folder</li>
+                    <li>Create a <code className="bg-blue-100 px-1 py-0.5 rounded">site_icons</code> folder in the same directory and place all icon files there</li>
+                    <li>Place the <code className="bg-blue-100 px-1 py-0.5 rounded">favicon.ico</code> and <code className="bg-blue-100 px-1 py-0.5 rounded">favicon.png</code> in the root directory</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
