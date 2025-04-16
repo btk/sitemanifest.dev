@@ -502,31 +502,51 @@ export default function Home() {
             {/* Icon Upload Section */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Step 4: Upload Icon</h2>
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                  isDragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <input {...getInputProps()} />
-                {isDragActive ? (
-                  <p className="text-indigo-600 font-medium">Drop the icon here...</p>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-gray-600">Drag and drop an icon, or click to select</p>
-                    <p className="text-sm text-gray-500">Supported formats: PNG, JPG, JPEG, GIF, SVG</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                    isDragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'
+                  } ${!image ? 'md:col-span-2' : ''}`}
+                >
+                  <input {...getInputProps()} />
+                  {isDragActive ? (
+                    <p className="text-indigo-600 font-medium">Drop the icon here...</p>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-gray-600">Drag and drop an icon, or click to select</p>
+                      <p className="text-sm text-gray-500">Supported formats: PNG, JPG, JPEG, GIF, SVG</p>
+                    </div>
+                  )}
+                </div>
+                {image && (
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="relative">
+                      <img
+                        src={image}
+                        alt="Preview"
+                        className="max-w-[150px] max-h-[150px] w-auto h-auto rounded-lg shadow-sm"
+                      />
+                      <button
+                        onClick={() => {
+                          setImage(null);
+                          setManifest(prev => ({
+                            ...prev,
+                            icons: []
+                          }));
+                        }}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                        title="Clear selection"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">Uploaded icon preview</p>
                   </div>
                 )}
               </div>
-              {image && (
-                <div className="mt-4">
-                  <img
-                    src={image}
-                    alt="Preview"
-                    className="max-w-xs mx-auto rounded-lg shadow-sm"
-                  />
-                </div>
-              )}
             </div>
 
             {/* Theme Colors Section */}
@@ -699,6 +719,133 @@ export default function Home() {
             {/* Download and Usage Instructions */}
             <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
               <div className="space-y-4">
+                {/* Validation Checklist */}
+                <div className="bg-white border rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">Manifest Validation</h4>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.name ? 'text-green-500' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.name ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.name ? 'text-gray-600' : 'text-red-600'}`}>
+                        App Name is {manifest.name ? 'set' : 'required'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.short_name ? 'text-green-500' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.short_name ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.short_name ? 'text-gray-600' : 'text-red-600'}`}>
+                        Short Name is {manifest.short_name ? 'set' : 'required'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.description ? 'text-green-500' : 'text-yellow-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.description ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.description ? 'text-gray-600' : 'text-yellow-600'}`}>
+                        Description is {manifest.description ? 'set' : 'recommended'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.start_url ? 'text-green-500' : 'text-yellow-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.start_url ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.start_url ? 'text-gray-600' : 'text-yellow-600'}`}>
+                        Start URL is {manifest.start_url ? 'set' : 'recommended'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.display ? 'text-green-500' : 'text-yellow-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.display ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.display ? 'text-gray-600' : 'text-yellow-600'}`}>
+                        Display Mode is {manifest.display ? 'set' : 'recommended'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.icons && manifest.icons.length > 0 ? 'text-green-500' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.icons && manifest.icons.length > 0 ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.icons && manifest.icons.length > 0 ? 'text-gray-600' : 'text-red-600'}`}>
+                        Icons are {manifest.icons && manifest.icons.length > 0 ? 'uploaded' : 'required'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.background_color ? 'text-green-500' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.background_color ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.background_color ? 'text-gray-600' : 'text-red-600'}`}>
+                        Background Color is {manifest.background_color ? 'set' : 'required'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.theme_color ? 'text-green-500' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.theme_color ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.theme_color ? 'text-gray-600' : 'text-red-600'}`}>
+                        Theme Color is {manifest.theme_color ? 'set' : 'required'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.icons?.some(icon => icon.purpose === 'maskable') ? 'text-green-500' : 'text-yellow-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.icons?.some(icon => icon.purpose === 'maskable') ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.icons?.some(icon => icon.purpose === 'maskable') ? 'text-gray-600' : 'text-yellow-600'}`}>
+                        Maskable Icons are {manifest.icons?.some(icon => icon.purpose === 'maskable') ? 'included' : 'recommended'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <svg className={`w-5 h-5 ${manifest.icons?.some(icon => icon.sizes === '512x512') ? 'text-green-500' : 'text-yellow-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {manifest.icons?.some(icon => icon.sizes === '512x512') ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        )}
+                      </svg>
+                      <span className={`text-sm ${manifest.icons?.some(icon => icon.sizes === '512x512') ? 'text-gray-600' : 'text-yellow-600'}`}>
+                        512x512 Icon is {manifest.icons?.some(icon => icon.sizes === '512x512') ? 'included' : 'recommended'}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     onClick={handleCopyJson}
@@ -722,7 +869,12 @@ export default function Home() {
                   </button>
                   <button
                     onClick={handleDownload}
-                    className="flex-1 px-4 py-3 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                    disabled={!manifest.name || !manifest.short_name || !manifest.icons?.length || !manifest.background_color || !manifest.theme_color}
+                    className={`flex-1 px-4 py-3 text-sm rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                      !manifest.name || !manifest.short_name || !manifest.icons?.length || !manifest.background_color || !manifest.theme_color
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
