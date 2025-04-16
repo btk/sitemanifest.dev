@@ -159,6 +159,7 @@ export default function Home() {
           { size: 128, purpose: 'any' },
           { size: 144, purpose: 'any' },
           { size: 152, purpose: 'any' },
+          { size: 180, purpose: 'any' }, // Apple Touch Icon
           { size: 192, purpose: 'any' },
           { size: 384, purpose: 'any' },
           { size: 512, purpose: 'any' },
@@ -184,11 +185,16 @@ export default function Home() {
             // Draw the icon in the safe zone
             resizedCtx.drawImage(pngImg, padding, padding, size - padding * 2, size - padding * 2);
           } else {
+            // For Apple Touch Icon (180x180), use high-quality rendering
+            if (size === 180) {
+              resizedCtx.imageSmoothingEnabled = true;
+              resizedCtx.imageSmoothingQuality = 'high';
+            }
             resizedCtx.drawImage(pngImg, 0, 0, size, size);
           }
 
           // Convert canvas to blob
-          const blob = await new Promise(resolve => resizedCanvas.toBlob(resolve, 'image/png'));
+          const blob = await new Promise(resolve => resizedCanvas.toBlob(resolve, 'image/png', 1.0)); // Maximum quality for PNG
           const resizedUrl = URL.createObjectURL(blob);
 
           return {
@@ -290,6 +296,13 @@ export default function Home() {
         // Add both .ico and .png versions
         zip.file('favicon.ico', smallestIcon);
         zip.file('favicon.png', smallestIcon);
+        // Add apple-touch-icon.png (180x180 is recommended for iOS)
+        const appleTouchIcon = manifest.icons.find(icon => icon.sizes === '180x180')?.src || manifest.icons[0].src;
+        if (appleTouchIcon) {
+          const response = await fetch(appleTouchIcon);
+          const blob = await response.blob();
+          zip.file('apple-touch-icon.png', blob);
+        }
       }
       
       // Generate and download the zip file
@@ -646,6 +659,23 @@ export default function Home() {
                   </div>
                 </div>
 
+                {/* Apple Touch Icon Preview */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Apple Touch Icon</h4>
+                  <div className="flex items-center gap-6">
+                    <div className="flex flex-col items-center">
+                      <div className="bg-white p-2 rounded-xl shadow-sm">
+                        <img 
+                          src={manifest.icons.find(icon => icon.sizes === '180x180')?.src || manifest.icons[0].src} 
+                          alt="Apple Touch Icon" 
+                          className="w-16 h-16"
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 mt-1">180x180</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Regular Icons */}
                 <div className="mb-6">
                   <h4 className="text-sm font-medium text-gray-700 mb-3">Regular Icons</h4>
@@ -935,9 +965,9 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <footer className="py-4">
-        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-400">
-          All Vibe-Coded with AI
+      <footer className="py-4 bg-white">
+        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-500">
+          All Vibe-Coded with AI · <a href="http://www.buraktokak.com/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700 transition-colors">buraktokak.com</a>
         </div>
       </footer>
     </>
