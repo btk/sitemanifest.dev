@@ -332,8 +332,22 @@ export default function Home() {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
       </Head>
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Sparkles */}
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-2 h-2 bg-indigo-200 rounded-full animate-float" style={{ animationDelay: '0s', marginLeft: '-50px' }}></div>
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-3 h-3 bg-purple-200 rounded-full animate-float" style={{ animationDelay: '1s', marginLeft: '50px' }}></div>
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-2 h-2 bg-pink-200 rounded-full animate-float" style={{ animationDelay: '2s', marginLeft: '-100px' }}></div>
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-3 h-3 bg-indigo-200 rounded-full animate-float" style={{ animationDelay: '3s', marginLeft: '100px' }}></div>
+          
+          {/* Floating Shapes */}
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-4 h-4 border-2 border-indigo-200 rounded-lg animate-float-slow rotate-45" style={{ animationDelay: '0.5s', marginLeft: '-150px' }}></div>
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-4 h-4 border-2 border-purple-200 rounded-lg animate-float-slow -rotate-45" style={{ animationDelay: '1.5s', marginLeft: '150px' }}></div>
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-4 h-4 border-2 border-pink-200 rounded-full animate-float-slow rotate-12" style={{ animationDelay: '2.5s' }}></div>
+        </div>
+
+        <div className="max-w-4xl mx-auto relative">
           <div className="text-center mb-12">
             <img 
               src="/logo.svg" 
