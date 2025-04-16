@@ -5,6 +5,7 @@ import { isMobile } from 'react-device-detect';
 import { JsonView, allExpanded, darkStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 import { useStore } from '../store';
+import { generateManifest } from '../utils/manifestGenerator';
 
 export default function Home() {
   const [image, setImage] = useState(null);
@@ -21,31 +22,21 @@ export default function Home() {
     if (acceptedFiles.length === 0) return;
 
     const file = acceptedFiles[0];
-    setImage(URL.createObjectURL(file));
+    const imageUrl = URL.createObjectURL(file);
+    setImage(imageUrl);
     setLoading(true);
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to analyze image');
-      }
-
-      const data = await response.json();
-      setManifest(data);
+      const manifestData = await generateManifest(imageUrl, themeColor);
+      setManifest(manifestData);
     } catch (err) {
-      setError(err.message);
+      setError('Failed to analyze image. Please try again.');
+      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [themeColor]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

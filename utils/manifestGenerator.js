@@ -1,29 +1,45 @@
-import { getColors } from 'color-thief-node';
-
 export const generateManifest = async (imagePath, themeColor) => {
   try {
     console.log('Processing image:', imagePath);
     
-    // If imagePath is a URL, we need to fetch it first
-    let imageBuffer;
-    if (imagePath.startsWith('blob:')) {
-      console.log('Fetching blob URL...');
-      const response = await fetch(imagePath);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
-      }
-      const arrayBuffer = await response.arrayBuffer();
-      imageBuffer = Buffer.from(arrayBuffer);
-      console.log('Image fetched successfully');
-    } else {
-      imageBuffer = imagePath;
-    }
-
-    console.log('Extracting colors...');
-    const colors = await getColors(imageBuffer, 5);
-    console.log('Colors extracted:', colors);
+    // Create a temporary image element to load the image
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
     
-    const dominantColor = colors[0];
+    // Load the image
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = imagePath;
+    });
+    
+    console.log('Image loaded successfully');
+    
+    // Create a canvas to analyze the image
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    
+    // Get the image data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Simple color extraction (get the most common color)
+    const colorCounts = {};
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const color = `rgb(${r},${g},${b})`;
+      colorCounts[color] = (colorCounts[color] || 0) + 1;
+    }
+    
+    // Get the most common color
+    const dominantColor = Object.entries(colorCounts)
+      .sort((a, b) => b[1] - a[1])[0][0];
+    
     console.log('Dominant color:', dominantColor);
 
     return {
