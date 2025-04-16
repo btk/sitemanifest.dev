@@ -594,6 +594,86 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Icon Preview Section */}
+            {manifest.icons && manifest.icons.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Icon Preview</h2>
+                
+                {/* Favicon Preview */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Favicon</h4>
+                  <div className="flex items-center gap-6">
+                    <div className="flex flex-col items-center">
+                      <div className="flex gap-2">
+                        <div className="bg-white p-1 rounded">
+                          <img 
+                            src={manifest.icons.find(icon => icon.sizes === '32x32')?.src} 
+                            alt="Favicon on white" 
+                            className="w-8 h-8"
+                          />
+                        </div>
+                        <div className="bg-gray-900 p-1 rounded">
+                          <img 
+                            src={manifest.icons.find(icon => icon.sizes === '32x32')?.src} 
+                            alt="Favicon on dark" 
+                            className="w-8 h-8"
+                          />
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-500 mt-1">32x32</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Regular Icons */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Regular Icons</h4>
+                  <div className="overflow-x-auto">
+                    <div className="flex gap-4 min-w-max pb-2">
+                      {manifest.icons
+                        .filter(icon => icon.purpose === 'any')
+                        .map((icon, index) => (
+                          <div key={index} className="flex flex-col items-center">
+                            <img 
+                              src={icon.src} 
+                              alt={`Icon ${icon.sizes}`} 
+                              className="w-12 h-12 object-contain"
+                            />
+                            <span className="text-xs text-gray-500 mt-1">{icon.sizes}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Maskable Icons */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Maskable Icons</h4>
+                  <div className="overflow-x-auto">
+                    <div className="flex gap-4 min-w-max pb-2">
+                      {manifest.icons
+                        .filter(icon => icon.purpose === 'maskable')
+                        .map((icon, index) => (
+                          <div key={index} className="flex flex-col items-center">
+                            <div 
+                              className="w-12 h-12 rounded-2xl p-1"
+                              style={{ backgroundColor: manifest.background_color }}
+                            >
+                              <img 
+                                src={icon.src} 
+                                alt={`Maskable Icon ${icon.sizes}`} 
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <span className="text-xs text-gray-500 mt-1">{icon.sizes}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Advanced Settings Section */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Step 6: Advanced Settings</h2>
@@ -610,6 +690,9 @@ export default function Home() {
                     Prefer Related Applications
                   </label>
                 </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  When enabled, the browser will prioritize showing related native applications in the app install banner instead of the PWA. This is useful if you have a native app that provides a better experience than the web app.
+                </p>
               </div>
             </div>
 
@@ -649,71 +732,6 @@ export default function Home() {
                   }} />
                 </pre>
               </div>
-
-              {/* Icon Preview Section */}
-              {manifest.icons && manifest.icons.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Icon Preview</h3>
-                  
-                  {/* Favicon Preview */}
-                  <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Favicon</h4>
-                    <div className="flex items-center gap-4">
-                      <div className="flex flex-col items-center">
-                        <img 
-                          src={manifest.icons.find(icon => icon.sizes === '32x32')?.src} 
-                          alt="Favicon" 
-                          className="w-8 h-8"
-                        />
-                        <span className="text-xs text-gray-500 mt-1">32x32</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Regular Icons */}
-                  <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Regular Icons</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {manifest.icons
-                        .filter(icon => icon.purpose === 'any')
-                        .map((icon, index) => (
-                          <div key={index} className="flex flex-col items-center">
-                            <img 
-                              src={icon.src} 
-                              alt={`Icon ${icon.sizes}`} 
-                              className="w-16 h-16 object-contain"
-                            />
-                            <span className="text-xs text-gray-500 mt-1">{icon.sizes}</span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Maskable Icons */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Maskable Icons</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {manifest.icons
-                        .filter(icon => icon.purpose === 'maskable')
-                        .map((icon, index) => (
-                          <div key={index} className="flex flex-col items-center">
-                            <div 
-                              className="w-16 h-16 rounded-2xl p-2"
-                              style={{ backgroundColor: manifest.background_color }}
-                            >
-                              <img 
-                                src={icon.src} 
-                                alt={`Maskable Icon ${icon.sizes}`} 
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                            <span className="text-xs text-gray-500 mt-1">{icon.sizes}</span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Download and Usage Instructions */}
@@ -896,6 +914,11 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <footer className="py-4">
+        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-400">
+          All Vibe-Coded with AI
+        </div>
+      </footer>
     </>
   );
 }
