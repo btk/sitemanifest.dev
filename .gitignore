@@ -30,21 +30,12 @@ yarn-error.log*
 # vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
 # IDE
-.idea/
-.vscode/
+.idea
+.vscode
 *.swp
 *.swo
 
-# Generated files
-/public/icons/
-/public/favicon*
-/public/apple-touch-icon*
-
-# Logs
+# logs
 logs
 *.log

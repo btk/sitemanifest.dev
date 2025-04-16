@@ -1,88 +1,65 @@
-# PWA Manifest Generator
+# Site Manifest Generator
 
-A modern web application for generating PWA manifest files and related assets. Built with Next.js, TypeScript, and Tailwind CSS.
+A modern web application for generating PWA manifest files and related assets. Built with Next.js and Tailwind CSS.
 
 ## Features
 
-### Core Features (v1-ready)
-- 🧾 Manifest File Generation
-  - Generate full manifest.json based on user input
-  - Live preview of how it renders in browser UI (PWA prompt, app icon, splash, etc.)
+- Generate PWA manifest files
+- Upload and preview icons
+- Customize theme colors
+- Download generated manifest
+- Responsive design
 
-- 🖼️ Image Export Tools
-  - Upload one high-res source image
-  - Auto-generate all required PWA icon sizes (192x192, 512x512, maskable, etc.)
+## Tech Stack
 
-- 🌟 Favicon Generator
-  - Create favicons in all modern formats:
-    - favicon.ico
-    - apple-touch-icon.png
-    - favicon-16x16.png, favicon-32x32.png
+- [Next.js](https://nextjs.org/) - React framework
+- [React](https://reactjs.org/) - UI library
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Zustand](https://github.com/pmndrs/zustand) - State management
+- [React Dropzone](https://react-dropzone.js.org/) - File upload handling
+- [React Colorful](https://github.com/omgovich/react-colorful) - Color picker
+- [React JSON View Lite](https://github.com/mac-s-g/react-json-view-lite) - JSON viewer
 
-- 🧪 Preview & Validation
-  - Browser preview simulator (mobile/desktop)
+## Project Structure
+
+```
+sitemanifest.dev/
+├── components/        # Reusable UI components
+├── pages/            # Next.js pages
+│   ├── api/          # API routes
+│   ├── _app.js       # App wrapper
+│   ├── _document.js  # Document wrapper
+│   ├── index.js      # Home page
+│   └── manifest.js   # Manifest generator page
+├── public/           # Static assets
+├── store/            # State management
+├── styles/           # Global styles
+├── utils/            # Utility functions
+├── .gitignore        # Git ignore rules
+├── jsconfig.json     # JavaScript configuration
+├── next.config.js    # Next.js configuration
+├── package.json      # Project dependencies
+├── postcss.config.js # PostCSS configuration
+└── tailwind.config.js # Tailwind CSS configuration
+```
 
 ## Getting Started
 
-### Prerequisites
-- Node.js 18.x or later
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/sitemanifest.dev.git
-cd sitemanifest.dev
-```
-
+1. Clone the repository
 2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Development
-
-### Project Structure
-```
-sitemanifest.dev/
-├── pages/              # Next.js pages
-├── public/             # Static assets
-├── store/              # Zustand state management
-├── types/              # TypeScript type definitions
-├── utils/              # Utility functions
-└── styles/             # Global styles
-```
-
-### Tech Stack
-- [Next.js](https://nextjs.org/) - React framework
-- [TypeScript](https://www.typescriptlang.org/) - Type safety
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
-- [Zustand](https://github.com/pmndrs/zustand) - State management
-- [Sharp](https://sharp.pixelplumbing.com/) - Image processing
-- [Jimp](https://github.com/oliver-moran/jimp) - Image manipulation
-- [React Dropzone](https://react-dropzone.js.org/) - File uploads
-- [React Colorful](https://github.com/omgovich/react-colorful) - Color picker
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+3. Run the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT
