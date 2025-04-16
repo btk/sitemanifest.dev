@@ -335,12 +335,19 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            <img 
+              src="/logo.svg" 
+              alt="Site Manifest Logo" 
+              className="h-12 mx-auto mb-6"
+            />
+            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-gradient-x mb-4">
               PWA Manifest Generator
             </h1>
-            <p className="text-lg text-gray-600">
-              Generate PWA manifest files with automatic color detection and website crawling
-            </p>
+            <div className="max-w-2xl mx-auto">
+              <p className="text-lg text-gray-600 leading-relaxed">
+                Create compliant website manifests in seconds with <span className="font-medium text-indigo-600">smart color extraction</span>, <span className="font-medium text-purple-600">icon generation</span> and <span className="font-medium text-pink-600">website analysis</span>
+              </p>
+            </div>
           </div>
 
           <div className="space-y-8">
@@ -513,7 +520,7 @@ export default function Home() {
                   {isDragActive ? (
                     <p className="text-indigo-600 font-medium">Drop the icon here...</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex flex-col items-center justify-center h-full">
                       <p className="text-gray-600">Drag and drop an icon, or click to select</p>
                       <p className="text-sm text-gray-500">Supported formats: PNG, JPG, JPEG, GIF, SVG</p>
                     </div>
