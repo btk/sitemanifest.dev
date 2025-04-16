@@ -17,8 +17,12 @@ export const validateManifest = (manifest) => {
     if (value === undefined) return;
 
     // Check type
-    if (schema.type && typeof value !== schema.type) {
-      errors.push(`Invalid type for ${field}: expected ${schema.type}`);
+    if (schema.type) {
+      if (schema.type === 'array' && !Array.isArray(value)) {
+        errors.push(`Invalid type for ${field}: expected array`);
+      } else if (schema.type !== 'array' && typeof value !== schema.type) {
+        errors.push(`Invalid type for ${field}: expected ${schema.type}`);
+      }
     }
 
     // Check enum values

@@ -17,7 +17,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [validation, setValidation] = useState({ isValid: true, errors: [], warnings: [] });
 
-  // Validate manifest on changes
+  // Revalidate manifest whenever it changes
   useEffect(() => {
     setValidation(validateManifest(manifest));
   }, [manifest]);
@@ -67,7 +67,7 @@ export default function Home() {
       setImage(imageUrl);
       
       try {
-        // Create an image element to get the dominant color
+        // Create an image element
         const img = new Image();
         img.crossOrigin = "Anonymous";
         img.src = imageUrl;
@@ -77,38 +77,64 @@ export default function Home() {
           img.onerror = reject;
         });
 
-        // Create canvas to analyze image
+        // Create canvas to convert image to PNG
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = img.width;
         canvas.height = img.height;
         ctx.drawImage(img, 0, 0);
 
-        // Get image data
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        // Convert canvas to PNG blob
+        const pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const pngUrl = URL.createObjectURL(pngBlob);
+
+        // Create an image element to get the dominant color
+        const pngImg = new Image();
+        pngImg.crossOrigin = "Anonymous";
+        pngImg.src = pngUrl;
+        
+        await new Promise((resolve, reject) => {
+          pngImg.onload = resolve;
+          pngImg.onerror = reject;
+        });
+
+        // Create canvas to analyze the image
+        const colorCanvas = document.createElement('canvas');
+        const colorCtx = colorCanvas.getContext('2d');
+        colorCanvas.width = pngImg.width;
+        colorCanvas.height = pngImg.height;
+        colorCtx.drawImage(pngImg, 0, 0);
+
+        // Get the image data
+        const imageData = colorCtx.getImageData(0, 0, colorCanvas.width, colorCanvas.height);
         const data = imageData.data;
 
-        // Calculate average color
-        let r = 0, g = 0, b = 0;
+        // Simple color extraction (get the most common color)
+        const colorCounts = {};
         for (let i = 0; i < data.length; i += 4) {
-          r += data[i];
-          g += data[i + 1];
-          b += data[i + 2];
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          // Skip transparent pixels
+          if (data[i + 3] < 128) continue;
+          // Convert RGB to hex
+          const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+          colorCounts[hex] = (colorCounts[hex] || 0) + 1;
         }
-        const pixelCount = data.length / 4;
-        r = Math.round(r / pixelCount);
-        g = Math.round(g / pixelCount);
-        b = Math.round(b / pixelCount);
 
-        // Convert to hex
-        const hexColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        // Get the most common color
+        const dominantColor = Object.entries(colorCounts)
+          .sort((a, b) => b[1] - a[1])[0]?.[0] || '#ffffff';
 
         // Calculate a contrasting color for theme
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        const luminance = (0.299 * parseInt(dominantColor.slice(1, 3), 16) + 
+                          0.587 * parseInt(dominantColor.slice(3, 5), 16) + 
+                          0.114 * parseInt(dominantColor.slice(5, 7), 16)) / 255;
         const themeColor = luminance > 0.5 ? '#000000' : '#ffffff';
 
         // Generate icons in different sizes
         const iconSizes = [
+          { size: 32, purpose: 'any' },
           { size: 72, purpose: 'any' },
           { size: 96, purpose: 'any' },
           { size: 128, purpose: 'any' },
@@ -131,24 +157,25 @@ export default function Home() {
           resizedCanvas.width = size;
           resizedCanvas.height = size;
 
-          // For maskable icons, add padding
+          // For maskable icons, add padding (safe zone)
           if (purpose === 'maskable') {
-            const padding = size * 0.1; // 10% padding
-            resizedCtx.fillStyle = hexColor;
-            resizedCtx.fillRect(0, 0, size, size);
-            resizedCtx.drawImage(img, padding, padding, size - padding * 2, size - padding * 2);
+            const padding = size * 0.1; // 10% padding (safe zone)
+            // Clear the canvas (transparent background)
+            resizedCtx.clearRect(0, 0, size, size);
+            // Draw the icon in the safe zone
+            resizedCtx.drawImage(pngImg, padding, padding, size - padding * 2, size - padding * 2);
           } else {
-            resizedCtx.drawImage(img, 0, 0, size, size);
+            resizedCtx.drawImage(pngImg, 0, 0, size, size);
           }
 
           // Convert canvas to blob
-          const blob = await new Promise(resolve => resizedCanvas.toBlob(resolve, file.type));
+          const blob = await new Promise(resolve => resizedCanvas.toBlob(resolve, 'image/png'));
           const resizedUrl = URL.createObjectURL(blob);
 
           return {
             src: resizedUrl,
             sizes: `${size}x${size}`,
-            type: file.type,
+            type: 'image/png',
             purpose: purpose
           };
         }));
@@ -156,9 +183,13 @@ export default function Home() {
         setManifest(prev => ({
           ...prev,
           icons,
-          background_color: hexColor,
+          background_color: dominantColor,
           theme_color: themeColor
         }));
+
+        // Clean up object URLs
+        URL.revokeObjectURL(imageUrl);
+        URL.revokeObjectURL(pngUrl);
       } catch (error) {
         console.error('Error processing image:', error);
         // Fallback to single icon if processing fails
@@ -167,7 +198,7 @@ export default function Home() {
           icons: [{
             src: imageUrl,
             sizes: '192x192',
-            type: file.type
+            type: 'image/png'
           }]
         }));
       }
@@ -612,6 +643,68 @@ export default function Home() {
                   }} />
                 </pre>
               </div>
+
+              {/* Icon Preview Section */}
+              {manifest.icons && manifest.icons.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Icon Preview</h3>
+                  
+                  {/* Favicon Preview */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Favicon</h4>
+                    <div className="flex items-center gap-4">
+                      <div className="flex flex-col items-center">
+                        <img 
+                          src={manifest.icons.find(icon => icon.sizes === '32x32')?.src} 
+                          alt="Favicon" 
+                          className="w-8 h-8"
+                        />
+                        <span className="text-xs text-gray-500 mt-1">32x32</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Regular Icons */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Regular Icons</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {manifest.icons
+                        .filter(icon => icon.purpose === 'any')
+                        .map((icon, index) => (
+                          <div key={index} className="flex flex-col items-center">
+                            <img 
+                              src={icon.src} 
+                              alt={`Icon ${icon.sizes}`} 
+                              className="w-16 h-16 object-contain"
+                            />
+                            <span className="text-xs text-gray-500 mt-1">{icon.sizes}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Maskable Icons */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Maskable Icons</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {manifest.icons
+                        .filter(icon => icon.purpose === 'maskable')
+                        .map((icon, index) => (
+                          <div key={index} className="flex flex-col items-center">
+                            <div className="w-16 h-16 rounded-2xl bg-gray-100 p-2">
+                              <img 
+                                src={icon.src} 
+                                alt={`Maskable Icon ${icon.sizes}`} 
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <span className="text-xs text-gray-500 mt-1">{icon.sizes}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
